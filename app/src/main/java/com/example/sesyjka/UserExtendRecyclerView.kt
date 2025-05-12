@@ -1,6 +1,7 @@
 package com.example.sesyjka
 
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,8 +21,9 @@ class UserExtendRecyclerView(val context: Context, val userList: ArrayList<User>
         position: Int
     ) {
         val currentUser = userList[position]
-
+        Log.d("USER_LIST", "User: ${currentUser.name}")
         holder.textName.text = currentUser.name
+
     }
 
     override fun getItemCount(): Int {
