@@ -1,6 +1,7 @@
 package com.example.sesyjka
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -43,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         mAuth = FirebaseAuth.getInstance()
         userList = ArrayList()
         adapter = UserExtendRecyclerView(this, userList)
-        supportActionBar?.hide()
+
 
 
         userRecyclerView = findViewById(R.id.userRecyclerView)
@@ -58,19 +59,12 @@ class MainActivity : AppCompatActivity() {
                 userList.clear()
                 for (postSnapshot in snapshot.children) {
                     val currentUser = postSnapshot.getValue(User::class.java)
-                    Log.d("FIREBASE_USER", "User: $currentUser")
-                    Log.d("FIREBASE_USER", "UserListSize: ${userList.size}, Example: ${userList.firstOrNull()}")
 
-                    if (currentUser != null) {
-                        userList.add(currentUser)
+                    if(mAuth.currentUser?.uid != currentUser?.uid){
+                        userList.add(currentUser!!)
                     }
                 }
                 Toast.makeText(this@MainActivity, "Pobrano: ${userList.size} użytkowników", Toast.LENGTH_SHORT).show()
-
-                userRecyclerView.post {
-                    Toast.makeText(this@MainActivity, "Pierwszy użytkownik: ${userList.firstOrNull()?.name}", Toast.LENGTH_LONG).show()
-                }
-
                 adapter.notifyDataSetChanged()
 
             }
@@ -92,7 +86,8 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if(item.itemId == R.id.logout) {
             mAuth.signOut()
-            finish()
+            val intent = Intent(this@MainActivity, Login::class.java)
+            startActivity(intent)
             return true
         }
         return true

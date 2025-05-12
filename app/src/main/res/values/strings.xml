@@ -2,4 +2,6 @@
     <string name="app_name">Sesyjka</string>
     <string name="title_activity_login">Login</string>
     <string name="title_activity_sign_up">SignUp</string>
+    <string name="title_activity_chat_engine">ChatEngine</string>
+    <string name="title_activity_main2">MainActivity2</string>
 </resources>
