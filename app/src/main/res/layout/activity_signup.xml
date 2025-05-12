@@ -50,12 +50,31 @@
         />
     <Button
         android:id="@+id/signin_action"
-        android:layout_width="60dp"
-        android:layout_height="40dp"
-        android:layout_below="@+id/password_entry"
-        android:text="Sign in"
+        android:layout_marginBottom="15dp"
+        android:layout_width="160dp"
+        android:layout_height="45dp"
+        android:layout_below="@id/password_entry"
         android:layout_centerHorizontal="true"
-        android:background="@drawable/btn_background"
-        android:layout_marginTop="10dp"/>
+        android:layout_marginTop="24dp"
+        android:background="#FFFFFF"
+        android:text="SIGN IN"
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:tint="@android:color/black" />
+
+    <Button
+        android:id="@+id/login_action"
+        android:layout_width="160dp"
+        android:layout_height="45dp"
+        android:layout_below="@id/signin_action"
+        android:layout_centerHorizontal="true"
+
+        android:background="#FFFFFF"
+        android:text="LOG IN"
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:tint="@android:color/black" />
 
 </RelativeLayout>

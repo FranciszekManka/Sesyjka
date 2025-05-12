@@ -1,4 +1,7 @@
 package com.example.sesyjka
 
-class user {
-}
+data class User(
+    val name: String = "",
+    val email: String = "",
+    val uid: String = ""
+)

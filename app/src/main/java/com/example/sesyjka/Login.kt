@@ -40,9 +40,16 @@ class Login : ComponentActivity() {
         buttonSignup = findViewById(R.id.signin_action)
 
 
+        buttonSignup.setOnClickListener {
+            val intent = Intent(this, SignUp::class.java)
+            startActivity(intent)
+        }
+
         buttonLogin.setOnClickListener {
             val email = email_entry.text.toString()
-            val password = password_entry.toString()
+            val password = password_entry.text.toString()
+
+            login(email, password)
 
         }
 
@@ -52,7 +59,9 @@ class Login : ComponentActivity() {
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     val intent = Intent(this@Login, MainActivity::class.java)
+                    finish()
                     startActivity(intent)
+
                 } else {
                     Toast.makeText(this@Login, "Error", Toast.LENGTH_SHORT).show()
                 }
