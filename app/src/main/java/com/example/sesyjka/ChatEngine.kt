@@ -15,19 +15,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.recyclerview.widget.RecyclerView
 import com.example.sesyjka.ui.theme.SesyjkaTheme
 
 class ChatEngine : AppCompatActivity() {
 
-    private lateinit var messageRecyclerView: UserExtendRecyclerView
+    private lateinit var messageRecyclerView: RecyclerView
     private lateinit var messageBox: EditText
     private lateinit var sendButton : ImageView
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
-            super.onCreate(savedInstanceState)
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_chatengine)
 
-        val intent = Intent()
         val name = intent.getStringExtra("name")
         val uid = intent.getStringExtra("uid")
 
@@ -37,6 +38,7 @@ class ChatEngine : AppCompatActivity() {
         messageBox = findViewById(R.id.messagebox)
         sendButton = findViewById(R.id.send)
     }
+
 }
 
 
