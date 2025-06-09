@@ -31,7 +31,8 @@ class UserExtendRecyclerView(val context: Context, val userList: ArrayList<User>
             val intent = Intent(context,ChatEngine::class.java)
 
             intent.putExtra("name", currentUser.name)
-            intent.putExtra("uid", FirebaseAuth.getInstance().currentUser?.uid)
+            intent.putExtra("uid", currentUser.uid)
+
 
             context.startActivity(intent)
         }

@@ -1,69 +1,107 @@
 package com.example.sesyjka
 
-import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.EditText
 import android.widget.ImageView
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.sesyjka.ui.theme.SesyjkaTheme
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
 
 class ChatEngine : AppCompatActivity() {
 
     private lateinit var messageRecyclerView: RecyclerView
     private lateinit var messageBox: EditText
-    private lateinit var sendButton : ImageView
+    private lateinit var sendButton: ImageView
+    private lateinit var messageList: ArrayList<Message>
+    private lateinit var messageAdapter: MessageAdapter
 
+    private lateinit var mDbRef: DatabaseReference
+
+    private var receiverUid: String? = null
+    private var senderUid: String? = null
+
+    private var senderRoom: String? = null
+    private var receiverRoom: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chatengine)
 
+        // Firebase init
+        mDbRef = FirebaseDatabase.getInstance("https://sesyjkaapp-default-rtdb.europe-west1.firebasedatabase.app").getReference()
+
+        // Dane z poprzedniego ekranu
         val name = intent.getStringExtra("name")
-        val uid = intent.getStringExtra("uid")
+        receiverUid = intent.getStringExtra("uid")
+        senderUid = FirebaseAuth.getInstance().currentUser?.uid
 
         supportActionBar?.title = name
 
+        val sender = senderUid ?: ""
+        val receiver = receiverUid ?: ""
+
+        val rooms = listOf(sender, receiver).sorted()
+        senderRoom = rooms[0] + rooms[1]
+        receiverRoom = rooms[0] + rooms[1]
+
+
+
+        // Widoki
         messageRecyclerView = findViewById(R.id.chatRecyclerView)
         messageBox = findViewById(R.id.messagebox)
         sendButton = findViewById(R.id.send)
+
+        // Adapter
+        messageList = ArrayList()
+        messageAdapter = MessageAdapter(this, messageList)
+        Log.d("DEBUG", "senderRoom = $senderRoom, receiverRoom = $receiverRoom")
+
+        messageRecyclerView.layoutManager = LinearLayoutManager(this)
+        messageRecyclerView.adapter = messageAdapter
+
+        // Odbieranie wiadomości
+        mDbRef.child("chats").child(senderRoom!!).child("messages")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    Log.d("FIREBASE", "onDataChange wywołany")
+                    messageList.clear()
+                    for (postSnapshot in snapshot.children) {
+                        val message = postSnapshot.getValue(Message::class.java)
+                        Log.d("FIREBASE", "Odebrana wiadomość: ${message?.message}, senderId: ${message?.senderId}")
+                        if (message != null) {
+                            messageList.add(message)
+                        }
+                    }
+                    Log.d("FIREBASE", "Liczba wiadomości w liście: ${messageList.size}")
+                    messageAdapter.notifyItemInserted(messageList.size - 1)
+                    messageRecyclerView.scrollToPosition(messageList.size - 1)
+
+                }
+
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("FIREBASE", "DB Error: $error")
+                }
+            })
+
+
+        // Wysyłanie wiadomości
+        sendButton.setOnClickListener {
+            val messageText = messageBox.text.toString().trim()
+            val messageObject = Message(messageText, senderUid ?: "")
+
+            if (messageText.isNotEmpty()) {
+                mDbRef.child("chats").child(senderRoom!!).child("messages").push()
+                    .setValue(messageObject).addOnSuccessListener {
+                        mDbRef.child("chats").child(receiverRoom!!).child("messages").push()
+                            .setValue(messageObject)
+                    }
+                messageBox.setText("")
+            }
+        }
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
