@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="#90CAF9">
 
-    <!-- Logo -->
+
     <ImageView
         android:id="@+id/logo"
         android:layout_width="150dp"
@@ -14,7 +14,20 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="100dp" />
 
-    <!-- Email Field -->
+    <TextView
+        android:id="@+id/titleText"
+        android:layout_below="@+id/logo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SESYJKA"
+        android:layout_centerHorizontal="true"
+        android:textColor="#FFFFFF"
+        android:textSize="36sp"
+        android:textStyle="bold"
+        android:layout_gravity="center"
+        android:layout_marginBottom="32dp"
+        />
+
     <EditText
         android:id="@+id/email_entry"
         android:layout_width="match_parent"
@@ -29,7 +42,7 @@
         android:textSize="16sp"
         android:padding="12dp" />
 
-    <!-- Password Field -->
+
     <EditText
         android:id="@+id/password_entry"
         android:layout_width="match_parent"
@@ -50,7 +63,7 @@
         android:layout_below="@id/password_entry"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="24dp"
-        android:background="#FFFFFF"
+        android:background="@drawable/border_2"
         android:text="LOG IN"
         android:textColor="#000000"
         android:textSize="16sp"
@@ -62,8 +75,8 @@
         android:layout_height="45dp"
         android:layout_below="@id/login_action"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="12dp"
-        android:background="#FFFFFF"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/border_2"
         android:text="SIGN IN"
         android:textColor="#000000"
         android:textSize="16sp"

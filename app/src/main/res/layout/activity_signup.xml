@@ -12,6 +12,19 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="100dp"
         />
+    <TextView
+        android:id="@+id/titleText"
+        android:layout_below="@+id/logo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SESYJKA"
+        android:layout_centerHorizontal="true"
+        android:textColor="#FFFFFF"
+        android:textSize="36sp"
+        android:textStyle="bold"
+        android:layout_gravity="center"
+        android:layout_marginBottom="32dp"
+        />
     <EditText
         android:id="@+id/name_entry"
         android:background="@drawable/edit_background"
@@ -47,17 +60,20 @@
         android:layout_marginLeft="80dp"
         android:layout_marginRight="80dp"
         android:paddingLeft="13dp"
+
         />
     <Button
         android:id="@+id/signin_action"
-        android:layout_marginBottom="15dp"
+        android:layout_marginBottom="5dp"
         android:layout_width="160dp"
         android:layout_height="45dp"
         android:layout_below="@id/password_entry"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="24dp"
-        android:background="#FFFFFF"
+        android:background="@drawable/border_2"
+
         android:text="SIGN IN"
+
         android:textColor="#000000"
         android:textSize="16sp"
         android:textStyle="bold"
@@ -70,7 +86,7 @@
         android:layout_below="@id/signin_action"
         android:layout_centerHorizontal="true"
 
-        android:background="#FFFFFF"
+        android:background="@drawable/border_2"
         android:text="LOG IN"
         android:textColor="#000000"
         android:textSize="16sp"

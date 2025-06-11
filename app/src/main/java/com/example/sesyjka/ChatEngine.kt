@@ -40,14 +40,8 @@ class ChatEngine : AppCompatActivity() {
 
         supportActionBar?.title = name
 
-        val sender = senderUid ?: ""
-        val receiver = receiverUid ?: ""
-
-        val rooms = listOf(sender, receiver).sorted()
-        senderRoom = rooms[0] + rooms[1]
-        receiverRoom = rooms[0] + rooms[1]
-
-
+        senderRoom = senderUid + receiverUid
+        receiverRoom = receiverUid + senderUid
 
         // Widoki
         messageRecyclerView = findViewById(R.id.chatRecyclerView)
@@ -57,7 +51,6 @@ class ChatEngine : AppCompatActivity() {
         // Adapter
         messageList = ArrayList()
         messageAdapter = MessageAdapter(this, messageList)
-        Log.d("DEBUG", "senderRoom = $senderRoom, receiverRoom = $receiverRoom")
 
         messageRecyclerView.layoutManager = LinearLayoutManager(this)
         messageRecyclerView.adapter = messageAdapter
@@ -66,27 +59,31 @@ class ChatEngine : AppCompatActivity() {
         mDbRef.child("chats").child(senderRoom!!).child("messages")
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    Log.d("FIREBASE", "onDataChange wywołany")
-                    messageList.clear()
+                    Log.d("FIREBASE", "onDataChange wywołany, snapshot children count: ${snapshot.childrenCount}")
+
+                    val newMessages = ArrayList<Message>()
                     for (postSnapshot in snapshot.children) {
                         val message = postSnapshot.getValue(Message::class.java)
-                        Log.d("FIREBASE", "Odebrana wiadomość: ${message?.message}, senderId: ${message?.senderId}")
                         if (message != null) {
-                            messageList.add(message)
+                            newMessages.add(message)
                         }
                     }
-                    Log.d("FIREBASE", "Liczba wiadomości w liście: ${messageList.size}")
-                    messageAdapter.notifyItemInserted(messageList.size - 1)
-                    messageRecyclerView.scrollToPosition(messageList.size - 1)
 
+                    // Bezpieczna aktualizacja danych
+                    messageList.clear()
+                    messageList.addAll(newMessages)
+
+                    // Powiadomienie adaptera na głównym wątku
+                    messageRecyclerView.post {
+                        messageAdapter.notifyDataSetChanged()
+                        messageRecyclerView.scrollToPosition(messageList.size - 1)
+                    }
                 }
-
 
                 override fun onCancelled(error: DatabaseError) {
                     Log.e("FIREBASE", "DB Error: $error")
                 }
             })
-
 
         // Wysyłanie wiadomości
         sendButton.setOnClickListener {
@@ -103,5 +100,4 @@ class ChatEngine : AppCompatActivity() {
             }
         }
     }
-
 }
