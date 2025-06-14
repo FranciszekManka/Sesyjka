@@ -1,4 +1,5 @@
 package com.example.sesyjka
+import User
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -90,6 +91,11 @@ class SignUp : ComponentActivity() {
                 Log.e("Firebase", "Błąd zapisu: ${e.message}")
                 Toast.makeText(this, "Błąd zapisu: ${e.message}", Toast.LENGTH_LONG).show()
             }
+        val intent = Intent(this@SignUp, CompleteProfileActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+        startActivity(intent)
+        finish()
+
     }
 
 }

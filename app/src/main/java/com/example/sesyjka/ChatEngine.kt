@@ -33,7 +33,7 @@ class ChatEngine : AppCompatActivity() {
         // Firebase init
         mDbRef = FirebaseDatabase.getInstance("https://sesyjkaapp-default-rtdb.europe-west1.firebasedatabase.app").getReference()
 
-        // Dane z poprzedniego ekranu
+
         val name = intent.getStringExtra("name")
         receiverUid = intent.getStringExtra("uid")
         senderUid = FirebaseAuth.getInstance().currentUser?.uid
@@ -76,14 +76,21 @@ class ChatEngine : AppCompatActivity() {
                     // Powiadomienie adaptera na głównym wątku
                     messageRecyclerView.post {
                         messageAdapter.notifyDataSetChanged()
-                        messageRecyclerView.scrollToPosition(messageList.size - 1)
+                        if (messageAdapter.itemCount > 0) {
+                            messageRecyclerView.smoothScrollToPosition(messageAdapter.itemCount - 1)
+                        }
                     }
+
                 }
 
                 override fun onCancelled(error: DatabaseError) {
                     Log.e("FIREBASE", "DB Error: $error")
                 }
             })
+        if (senderUid == null || receiverUid == null) {
+            finish()
+            return
+        }
 
         // Wysyłanie wiadomości
         sendButton.setOnClickListener {
@@ -96,8 +103,18 @@ class ChatEngine : AppCompatActivity() {
                         mDbRef.child("chats").child(receiverRoom!!).child("messages").push()
                             .setValue(messageObject)
                     }
+
                 messageBox.setText("")
+
+                messageRecyclerView.post {
+                    messageAdapter.notifyDataSetChanged()
+                    if (messageAdapter.itemCount > 0) {
+                        messageRecyclerView.smoothScrollToPosition(messageAdapter.itemCount - 1)
+                    }
+                }
             }
         }
+
+
     }
 }
