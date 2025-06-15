@@ -22,31 +22,77 @@
             android:contentDescription="Profilowe"
             android:src="@drawable/ic_user_placeholder" />
 
-        <TextView
-            android:id="@+id/tvName"
+        <!-- Imię i wiek w jednym wierszu, pogrubione -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:paddingTop="8dp" />
+            android:orientation="horizontal"
+            android:paddingTop="8dp">
 
+            <TextView
+                android:id="@+id/tvName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#000000" />
+
+            <TextView
+                android:id="@+id/tvAge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#000000" />
+        </LinearLayout>
+
+        <!-- Wydział -->
         <TextView
             android:id="@+id/tvDepartment"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingTop="4dp" />
+            android:paddingTop="4dp"
+            android:textColor="#444444" />
 
+        <!-- Miasto -->
         <TextView
             android:id="@+id/tvCity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingTop="2dp" />
+            android:paddingTop="2dp"
+            android:textColor="#444444" />
 
+        <!-- Kierunek i rok studiów -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="6dp">
+
+            <TextView
+                android:id="@+id/tvKierunek"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#444444"
+                android:textStyle="italic" />
+
+            <TextView
+                android:id="@+id/tvRok"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:textColor="#444444"
+                android:textStyle="italic" />
+        </LinearLayout>
+
+        <!-- Opis -->
         <TextView
             android:id="@+id/tvOpis"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingTop="6dp" />
+            android:paddingTop="6dp"
+            android:textColor="#666666" />
 
     </LinearLayout>
 

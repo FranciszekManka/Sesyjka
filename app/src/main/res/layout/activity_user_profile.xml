@@ -1,0 +1,62 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp"
+    android:background="#90CAF9">
+
+    <ImageView
+        android:id="@+id/imgProfile"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/ic_user_placeholder"
+        android:contentDescription="Avatar użytkownika"
+        android:layout_marginTop="40dp" />
+
+    <TextView
+        android:id="@+id/tvName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/imgProfile"
+        android:layout_marginTop="24dp"
+        android:layout_centerHorizontal="true"
+        android:text="Imię"
+        android:textSize="24sp"
+        android:textColor="#fff"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvDepartment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tvName"
+        android:layout_marginTop="12dp"
+        android:layout_centerHorizontal="true"
+        android:text="Wydział"
+        android:textSize="18sp"
+        android:textColor="#fff" />
+
+    <TextView
+        android:id="@+id/tvCity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tvDepartment"
+        android:layout_marginTop="12dp"
+        android:layout_centerHorizontal="true"
+        android:text="Miasto"
+        android:textSize="18sp"
+        android:textColor="#fff" />
+
+    <TextView
+        android:id="@+id/tvOpis"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tvCity"
+        android:layout_marginTop="24dp"
+        android:layout_centerHorizontal="true"
+        android:text="Opis użytkownika"
+        android:textSize="16sp"
+        android:textColor="#fff"
+        android:padding="16dp"
+        android:background="#33000000" />
+</RelativeLayout>

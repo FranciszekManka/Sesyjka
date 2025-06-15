@@ -39,11 +39,24 @@
         android:paddingLeft="13dp"
         />
     <EditText
-        android:id="@+id/email_entry"
+        android:id="@+id/age_entry"
         android:background="@drawable/edit_background"
         android:layout_width="match_parent"
         android:layout_height="25dp"
         android:layout_below="@+id/name_entry"
+
+        android:hint="Wiek" android:textSize="40px"
+        android:layout_marginLeft="80dp"
+        android:layout_marginRight="80dp"
+        android:layout_marginBottom="10dp"
+        android:paddingLeft="13dp"
+        />
+    <EditText
+        android:id="@+id/email_entry"
+        android:background="@drawable/edit_background"
+        android:layout_width="match_parent"
+        android:layout_height="25dp"
+        android:layout_below="@+id/age_entry"
         android:hint="Email" android:textSize="40px"
         android:layout_marginLeft="80dp"
         android:layout_marginRight="80dp"

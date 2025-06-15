@@ -17,10 +17,14 @@ class MainActivity : AppCompatActivity() {
 
         mAuth = FirebaseAuth.getInstance()
 
+        val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
+
 
         replaceFragment(DiscoverFragment())
 
-        val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
+
+        bottomNav.selectedItemId = R.id.nav_match
+
 
         bottomNav.setOnItemSelectedListener {
             when (it.itemId) {
@@ -31,6 +35,7 @@ class MainActivity : AppCompatActivity() {
             true
         }
     }
+
 
     private fun replaceFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()

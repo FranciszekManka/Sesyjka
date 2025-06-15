@@ -1,6 +1,7 @@
 package com.example.sesyjka
 
 import User
+import android.content.Intent
 import android.os.Bundle
 import android.view.*
 import android.widget.FrameLayout
@@ -12,6 +13,8 @@ import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import kotlin.math.absoluteValue
+import kotlin.random.Random
 
 class DiscoverFragment : Fragment() {
 
@@ -20,6 +23,7 @@ class DiscoverFragment : Fragment() {
     private lateinit var mDbRef: DatabaseReference
     private var userList = mutableListOf<User>()
     private var currentIndex = 0
+    private val avatarMap = mutableMapOf<String, Int>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -34,19 +38,21 @@ class DiscoverFragment : Fragment() {
             .getInstance("https://sesyjkaapp-default-rtdb.europe-west1.firebasedatabase.app")
             .getReference("users")
 
-        // Pobierz i wymieszaj
-        mDbRef.addListenerForSingleValueEvent(object: ValueEventListener {
+        mDbRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 userList.clear()
+                avatarMap.clear()
                 for (child in snapshot.children) {
                     val u = child.getValue(User::class.java)
                     if (u != null && u.uid != mAuth.currentUser?.uid) {
                         userList.add(u)
+                        avatarMap[u.uid!!] = Random.nextInt(1, 9)
                     }
                 }
                 userList.shuffle()
                 showNextCard()
             }
+
             override fun onCancelled(error: DatabaseError) {
                 Toast.makeText(context, "Błąd ładowania", Toast.LENGTH_SHORT).show()
             }
@@ -55,25 +61,39 @@ class DiscoverFragment : Fragment() {
         return view
     }
 
+    private fun getAvatarResource(uid: String): Int {
+        val avatarIndex = avatarMap[uid] ?: 1
+        return resources.getIdentifier(
+            "avatar$avatarIndex",
+            "drawable",
+            requireContext().packageName
+        )
+    }
+
     private fun showNextCard() {
         container.removeAllViews()
         if (currentIndex >= userList.size) {
             Toast.makeText(context, "Brak więcej użytkowników", Toast.LENGTH_SHORT).show()
             return
         }
+
         val user = userList[currentIndex++]
-        // Inflate karty
         val card = layoutInflater.inflate(R.layout.swipe_card_item, container, false) as CardView
 
-        // Wypełnij dane
-        val img = card.findViewById<ImageView>(R.id.imgProfile)
-        Glide.with(this).load(user.photoUrl).placeholder(R.drawable.ic_user_placeholder).into(img)
-        card.findViewById<TextView>(R.id.tvName).text = user.name ?: "Brak imienia"
-        card.findViewById<TextView>(R.id.tvDepartment).text = user.wydzial
-        card.findViewById<TextView>(R.id.tvCity).text = user.miasto
-        card.findViewById<TextView>(R.id.tvOpis).text = user.opis
+        // Uzupełnienie danych na karcie
+        Glide.with(this)
+            .load(getAvatarResource(user.uid ?: ""))
+            .placeholder(R.drawable.ic_user_placeholder)
+            .into(card.findViewById<ImageView>(R.id.imgProfile))
 
-        // Touch listener do swipe
+        card.findViewById<TextView>(R.id.tvName).text = user.name ?: "Brak imienia"
+        card.findViewById<TextView>(R.id.tvAge).text = user.age?.toString() ?: "?"
+        card.findViewById<TextView>(R.id.tvDepartment).text = user.wydzial ?: ""
+        card.findViewById<TextView>(R.id.tvCity).text = user.miasto ?: ""
+        card.findViewById<TextView>(R.id.tvKierunek).text = user.kierunek ?: ""
+        card.findViewById<TextView>(R.id.tvRok).text = user.rok_studiow ?: ""
+        card.findViewById<TextView>(R.id.tvOpis).text = user.opis ?: ""
+
         var downX = 0f
         var downY = 0f
         card.setOnTouchListener { v, event ->
@@ -93,31 +113,31 @@ class DiscoverFragment : Fragment() {
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     val dx = v.translationX
-                    val threshold = v.width / 4
-                    if (dx > threshold) {
-                        // Swipe w prawo
-                        v.animate()
-                            .translationX(v.width * 2f)
-                            .alpha(0f)
-                            .setDuration(200)
-                            .withEndAction { showNextCard() }
-                            .start()
-                    } else if (dx < -threshold) {
-                        // Swipe w lewo
-                        v.animate()
-                            .translationX(-v.width * 2f)
-                            .alpha(0f)
-                            .setDuration(200)
-                            .withEndAction { showNextCard() }
-                            .start()
-                    } else {
-                        // Cofnij do środka
-                        v.animate()
-                            .translationX(0f)
-                            .translationY(0f)
-                            .rotation(0f)
-                            .setDuration(200)
-                            .start()
+                    val dy = v.translationY
+                    val thresholdX = v.width / 4
+                    val thresholdY = v.height / 4
+
+                    when {
+                        dx > thresholdX -> {
+                            Toast.makeText(context, "Spotkanie!", Toast.LENGTH_SHORT).show()
+                            openChat(user)
+                            animateOut(v, v.width * 2f)
+                        }
+                        dx < -thresholdX -> {
+                            Toast.makeText(context, "Odrzucono", Toast.LENGTH_SHORT).show()
+                            animateOut(v, -v.width * 2f)
+                        }
+                        dy < -thresholdY -> {
+                            Toast.makeText(context, "Piwko 🍺?", Toast.LENGTH_SHORT).show()
+                            openChat(user)
+                            animateOut(v, 0f, -v.height * 2f)
+                        }
+                        dy > thresholdY -> {
+                            Toast.makeText(context, "Otwieram profil...", Toast.LENGTH_SHORT).show()
+                            openUserProfile(user)
+                            resetCard(v)
+                        }
+                        else -> resetCard(v)
                     }
                     true
                 }
@@ -126,5 +146,38 @@ class DiscoverFragment : Fragment() {
         }
 
         container.addView(card)
+    }
+
+    private fun animateOut(v: View, toX: Float, toY: Float = 0f) {
+        v.animate()
+            .translationX(toX)
+            .translationY(toY)
+            .alpha(0f)
+            .setDuration(200)
+            .withEndAction { showNextCard() }
+            .start()
+    }
+
+    private fun resetCard(v: View) {
+        v.animate()
+            .translationX(0f)
+            .translationY(0f)
+            .rotation(0f)
+            .setDuration(200)
+            .start()
+    }
+
+    private fun openChat(user: User) {
+        val intent = Intent(requireContext(), ChatEngine::class.java)
+        intent.putExtra("uid", user.uid)
+        intent.putExtra("name", user.name)
+        intent.putExtra("age", user.age)
+        requireActivity().startActivity(intent)
+    }
+
+    private fun openUserProfile(user: User) {
+        val intent = Intent(requireContext(), UserProfileActivity::class.java)
+        intent.putExtra("user_uid", user.uid)
+        requireActivity().startActivity(intent)
     }
 }

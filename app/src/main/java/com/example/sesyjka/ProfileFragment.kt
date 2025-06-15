@@ -10,16 +10,15 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
-import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.UploadTask
 
 class ProfileFragment : Fragment() {
 
     private lateinit var imgProfile: ImageView
     private lateinit var spinnerDept: Spinner
+    private lateinit var spinnerKierunek: Spinner
+    private lateinit var spinnerRok: Spinner
     private lateinit var etCity: EditText
     private lateinit var etOpis: EditText
     private lateinit var btnSave: Button
@@ -43,21 +42,36 @@ class ProfileFragment : Fragment() {
         ).getReference("users")
 
         // Widoki
-        imgProfile   = view.findViewById(R.id.imgProfile)
-        spinnerDept  = view.findViewById(R.id.spinnerDepartment)
-        etCity       = view.findViewById(R.id.etCity)
-        etOpis       = view.findViewById(R.id.etOpis)
-        btnSave      = view.findViewById(R.id.btnSave)
+        imgProfile     = view.findViewById(R.id.imgProfile)
+        spinnerDept    = view.findViewById(R.id.spinnerDepartment)
+        spinnerKierunek= view.findViewById(R.id.spinnerKierunek)
+        spinnerRok     = view.findViewById(R.id.spinnerRok)
+        etCity         = view.findViewById(R.id.etCity)
+        etOpis         = view.findViewById(R.id.etOpis)
+        btnSave        = view.findViewById(R.id.btnSave)
 
-        // 1) Spinner z wydziałami
-        val wydzialy = User.wydzialy
+        // Spinner wydział
         spinnerDept.adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_item,
-            wydzialy
+            User.wydzialy
         ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
 
-        // 2) Picker obrazów
+        // Spinner kierunek
+        spinnerKierunek.adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            User.kierunki
+        ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+
+        // Spinner rok
+        spinnerRok.adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            listOf("I", "II", "III", "IV", "V", "VI", "VII")
+        ).also { it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
+
+        // Obrazek profilowy
         pickImageLauncher = registerForActivityResult(
             ActivityResultContracts.GetContent()
         ) { uri ->
@@ -66,13 +80,17 @@ class ProfileFragment : Fragment() {
                 imgProfile.setImageURI(it)
             }
         }
-        imgProfile.setOnClickListener { pickImageLauncher.launch("image/*") }
 
-        // 3) Wczytaj istniejące dane użytkownika
+        imgProfile.setOnClickListener {
+            pickImageLauncher.launch("image/*")
+        }
+
+        // Wczytaj dane użytkownika
         val uid = mAuth.currentUser!!.uid
         mDbRef.child(uid).addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val user = snapshot.getValue(User::class.java) ?: return
+
                 // zdjęcie
                 if (user.photoUrl.isNotBlank()) {
                     Glide.with(this@ProfileFragment)
@@ -80,49 +98,55 @@ class ProfileFragment : Fragment() {
                         .placeholder(R.drawable.ic_user_placeholder)
                         .into(imgProfile)
                 }
-                // wydział
-                val pos = wydzialy.indexOf(user.wydzial)
-                if (pos >= 0) spinnerDept.setSelection(pos)
-                // miasto i opis
+
+                // ustawienia spinnerów
+                spinnerDept.setSelection(User.wydzialy.indexOf(user.wydzial).takeIf { it >= 0 } ?: 0)
+                spinnerKierunek.setSelection(User.kierunki.indexOf(user.kierunek).takeIf { it >= 0 } ?: 0)
+                spinnerRok.setSelection(
+                    listOf("I", "II", "III", "IV", "V", "VI", "VII").indexOf(user.rok_studiow).takeIf { it >= 0 } ?: 0
+                )
+
+                // inne dane
                 etCity.setText(user.miasto)
                 etOpis.setText(user.opis)
             }
 
-            override fun onCancelled(error: DatabaseError) { /* opcjonalnie obsłuż */ }
+            override fun onCancelled(error: DatabaseError) {}
         })
 
-        // 4) Zapis zmian
+        // Zapis profilu
         btnSave.setOnClickListener { saveProfile(uid) }
 
         return view
     }
 
     private fun saveProfile(uid: String) {
-        val dept = spinnerDept.selectedItem as String
+        val wydzial = spinnerDept.selectedItem as String
+        val kierunek = spinnerKierunek.selectedItem as String
+        val rok = spinnerRok.selectedItem as String
         val city = etCity.text.toString().trim()
         val opis = etOpis.text.toString().trim()
 
-        if (dept.isBlank() || city.isBlank()) {
+        if (wydzial.isBlank() || city.isBlank()) {
             Toast.makeText(requireContext(), "Wydział i miasto są wymagane", Toast.LENGTH_SHORT).show()
             return
         }
 
         val updateValues = mutableMapOf<String, Any>(
-            "wydzial" to dept,
+            "wydzial" to wydzial,
+            "kierunek" to kierunek,
+            "rok_studiow" to rok,
             "miasto" to city,
             "opis" to opis
         )
 
-        // Jeśli jest wybrane nowe zdjęcie — upload na Supabase:
         val photoUri = selectedPhotoUri
         if (photoUri != null) {
-            // Używamy ImageUploader zamiast FirebaseStorage
             ImageUploader.uploadImageToSupabase(
                 context = requireContext(),
                 fileUri = photoUri,
                 userId = uid,
                 onSuccess = { publicUrl ->
-                    // Po udanym uploadzie dodajemy URL zdjęcia do aktualizacji
                     updateValues["photoUrl"] = publicUrl
                     applyProfileUpdates(uid, updateValues)
                 },
@@ -131,7 +155,6 @@ class ProfileFragment : Fragment() {
                 }
             )
         } else {
-            // Nie zmieniamy zdjęcia - zapisujemy pozostałe dane
             applyProfileUpdates(uid, updateValues)
         }
     }
@@ -142,9 +165,11 @@ class ProfileFragment : Fragment() {
                 Toast.makeText(requireContext(), "Profil zaktualizowany", Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener { e ->
-                Toast.makeText(requireContext(),
-                    "Błąd zapisu profilu: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Błąd zapisu profilu: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
-
 }

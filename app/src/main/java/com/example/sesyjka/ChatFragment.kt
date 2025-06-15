@@ -1,11 +1,12 @@
 package com.example.sesyjka
 
+import User
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.ImageView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -14,67 +15,69 @@ import com.google.firebase.database.*
 
 class ChatFragment : Fragment() {
 
-    private lateinit var chatRecyclerView: RecyclerView
-    private lateinit var messageBox: EditText
-    private lateinit var sendButton: ImageView
-    private lateinit var messageList: ArrayList<Message>
-    private lateinit var messageAdapter: MessageAdapter
-
-    private lateinit var mDbRef: DatabaseReference
-    private lateinit var mAuth: FirebaseAuth
-
-    private val senderUid by lazy { mAuth.currentUser?.uid ?: "" }
-    private val receiverUid = "ADMIN_UID" // <- Zmień na prawdziwe UID odbiorcy
-
-    private val senderRoom by lazy { senderUid + receiverUid }
-    private val receiverRoom by lazy { receiverUid + senderUid }
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var chatList: ArrayList<User>
+    private lateinit var adapter: UserExtendRecyclerView
+    private lateinit var dbRef: DatabaseReference
+    private lateinit var auth: FirebaseAuth
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+
         val view = inflater.inflate(R.layout.activity_chatfragment, container, false)
 
-        mAuth = FirebaseAuth.getInstance()
-        mDbRef = FirebaseDatabase.getInstance("https://sesyjkaapp-default-rtdb.europe-west1.firebasedatabase.app").reference
+        recyclerView = view.findViewById(R.id.chatRecyclerView)
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        chatRecyclerView = view.findViewById(R.id.chatRecyclerView)
-        messageBox = view.findViewById(R.id.messagebox)
-        sendButton = view.findViewById(R.id.send)
+        chatList = ArrayList()
+        adapter = UserExtendRecyclerView(requireContext(), chatList)
+        recyclerView.adapter = adapter
 
-        messageList = ArrayList()
-        messageAdapter = MessageAdapter(requireContext(), messageList)
+        auth = FirebaseAuth.getInstance()
+        dbRef = FirebaseDatabase.getInstance(
+            "https://sesyjkaapp-default-rtdb.europe-west1.firebasedatabase.app"
+        ).getReference("chats")
 
-        chatRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        chatRecyclerView.adapter = messageAdapter
-
-        // Pobieranie wiadomości z Firebase
-        mDbRef.child("chats").child(senderRoom).child("messages")
-            .addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    messageList.clear()
-                    for (postSnapshot in snapshot.children) {
-                        val message = postSnapshot.getValue(Message::class.java)
-                        message?.let { messageList.add(it) }
-                    }
-                    messageAdapter.notifyDataSetChanged()
-                    chatRecyclerView.scrollToPosition(messageList.size - 1)
-                }
-
-                override fun onCancelled(error: DatabaseError) {}
-            })
-
-        // Wysyłanie wiadomości
-        sendButton.setOnClickListener {
-            val messageText = messageBox.text.toString().trim()
-            if (messageText.isNotEmpty()) {
-                val message = Message(messageText, senderUid)
-                mDbRef.child("chats").child(senderRoom).child("messages").push().setValue(message)
-                mDbRef.child("chats").child(receiverRoom).child("messages").push().setValue(message)
-                messageBox.setText("")
-            }
-        }
-
+        loadChatUsers()
         return view
     }
+
+    private fun loadChatUsers() {
+        val currentUid = auth.currentUser?.uid ?: return
+
+        dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                chatList.clear()
+
+                for (chatSnapshot in snapshot.children) {
+                    if (chatSnapshot.key?.contains(currentUid) == true) {
+                        val otherUid = chatSnapshot.key!!.replace(currentUid, "")
+                        // Pobieramy dane użytkownika
+                        FirebaseDatabase.getInstance(
+                            "https://sesyjkaapp-default-rtdb.europe-west1.firebasedatabase.app"
+                        ).getReference("users").child(otherUid)
+                            .addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onDataChange(userSnapshot: DataSnapshot) {
+                                    val user = userSnapshot.getValue(User::class.java)
+                                    if (user != null && !chatList.contains(user)) {
+                                        chatList.add(user)
+                                        adapter.notifyDataSetChanged()
+                                    }
+                                }
+                                override fun onCancelled(error: DatabaseError) {}
+                            })
+                    }
+                }
+                if (chatList.isEmpty()) {
+                    Toast.makeText(context, "Brak aktywnych czatów", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {}
+        })
+    }
+
+
 }
