@@ -107,32 +107,31 @@ class ProfileFragment : Fragment() {
             return
         }
 
-        // jeśli wybrano nowe zdjęcie, najpierw upload:
         val updateValues = mutableMapOf<String, Any>(
             "wydzial" to dept,
-            "miasto"  to city,
-            "opis"    to opis
+            "miasto" to city,
+            "opis" to opis
         )
 
-        val uploadTask: Task<Uri>? = selectedPhotoUri?.let { uri ->
-            val ref = FirebaseStorage.getInstance().getReference("/profile_images/$uid")
-            ref.putFile(uri)
-                .continueWithTask { task: Task<UploadTask.TaskSnapshot> ->
-                    if (!task.isSuccessful) task.exception?.let { throw it }
-                    ref.downloadUrl
+        // Jeśli jest wybrane nowe zdjęcie — upload na Supabase:
+        val photoUri = selectedPhotoUri
+        if (photoUri != null) {
+            // Używamy ImageUploader zamiast FirebaseStorage
+            ImageUploader.uploadImageToSupabase(
+                context = requireContext(),
+                fileUri = photoUri,
+                userId = uid,
+                onSuccess = { publicUrl ->
+                    // Po udanym uploadzie dodajemy URL zdjęcia do aktualizacji
+                    updateValues["photoUrl"] = publicUrl
+                    applyProfileUpdates(uid, updateValues)
+                },
+                onFailure = { errorMessage ->
+                    Toast.makeText(requireContext(), "Błąd uploadu zdjęcia: $errorMessage", Toast.LENGTH_SHORT).show()
                 }
-        }
-
-        if (uploadTask != null) {
-            uploadTask.addOnSuccessListener { downloadUri ->
-                updateValues["photoUrl"] = downloadUri.toString()
-                applyProfileUpdates(uid, updateValues)
-            }.addOnFailureListener { e ->
-                Toast.makeText(requireContext(),
-                    "Błąd uploadu zdjęcia: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+            )
         } else {
-
+            // Nie zmieniamy zdjęcia - zapisujemy pozostałe dane
             applyProfileUpdates(uid, updateValues)
         }
     }
@@ -147,4 +146,5 @@ class ProfileFragment : Fragment() {
                     "Błąd zapisu profilu: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
 }
